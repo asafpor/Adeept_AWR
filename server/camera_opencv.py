@@ -12,6 +12,8 @@ import time
 import threading
 import imutils
 import robotLight
+import traceback
+import subprocess
 
 light = robotLight.RobotLight()
 
@@ -416,17 +418,34 @@ class Camera(BaseCamera):
         Camera.video_source = source
 
     @staticmethod
-    def frames():
-        camera = cv2.VideoCapture(Camera.video_source)
-        if not camera.isOpened():
+    def open_camera():
+        print ("Camera.video_source = " + str(Camera.video_source) )
+        #        camera = cv2.VideoCapture(Camera.video_source)
+#        subprocess.Popen(["sudo","libcamera-vid","-t","0","-o","/home/pi/cam.h264"])
+#        subprocess.Popen(["sudo","libcamera-vid","-t","0", "--inline", "--listen", "-o", "tcp://0.0.0.0:1124"])
+        print ("Opened camera process")
+        time.sleep(3)
+#        camera = cv2.VideoCapture("/home/pi/cam.h264")
+        #libcamera-vid -t 0 --inline --listen -o tcp://0.0.0.0:1123
+        Camera.camera = cv2.VideoCapture("tcp://127.0.0.1:1134")
+        
+#        camera = cv2.VideoCapture("udp://@:1156?overrun_nonfatal=1&fifo_size=50000000 :demux=h264")
+
+        print ("Capture video")
+        if not Camera.camera.isOpened():
             raise RuntimeError('Could not start camera.')
 
+    @staticmethod
+    def frames():
+        
+        Camera.open_camera()
         cvt = CVThread()
         cvt.start()
-
+        errors = 0
         while True:
             # read current frame
-            _, img = camera.read()
+            Camera.camera.grab()
+            _, img = Camera.camera.read()
 
             if Camera.modeSelect == 'none':
                 switch.switch(1,0)
@@ -443,6 +462,16 @@ class Camera(BaseCamera):
                     pass
             
 
-
-            # encode as a jpeg image and return it
-            yield cv2.imencode('.jpg', img)[1].tobytes()
+            try:
+                # encode as a jpeg image and return it
+                yield cv2.imencode('.jpg', img)[1].tobytes()
+            except:
+                errors += 1
+                print("Error with camera")
+                print(traceback.format_exc())
+                time.sleep(1)
+                if (errors % 10 == 9):
+                    Camera.camera.release()
+                    cv2.destroyAllWindows()
+                    time.sleep(1)
+                    Camera.open_camera()

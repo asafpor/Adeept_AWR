@@ -3,9 +3,20 @@ from importlib import import_module
 import os
 from flask import Flask, render_template, Response, send_from_directory
 from flask_cors import *
+import traceback
+import sys
+
+
 # import camera driver
 
-from camera_opencv import Camera
+try:
+    from camera_opencv import Camera
+except:
+    print("An exception occurred cannot load camera cannot improt Camera")
+    print(traceback.format_exc())
+
+
+
 import threading
 
 # Raspberry Pi camera module (requires picamera package)
@@ -13,14 +24,26 @@ import threading
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-camera = Camera()
+
+camera = "" 
+try:
+    camera = Camera()
+    print(traceback.format_exc())
+
+except:
+    print("An exception occurred cannot load camera cannot create object")
 
 def gen(camera):
     """Video streaming generator function."""
     while True:
-        frame = camera.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        try:
+            frame = camera.get_frame()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        except:
+            continue
+             
+              
 
 @app.route('/video_feed')
 def video_feed():

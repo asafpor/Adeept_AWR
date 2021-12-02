@@ -24,6 +24,7 @@ import websockets
 
 import json
 import app
+import audioListner
 
 OLED_connection = 1
 try:
@@ -107,6 +108,7 @@ def ap_thread():
 
 def functionSelect(command_input, response):
     global functionMode
+
     if 'scan' == command_input:
         if OLED_connection:
             screen.screen_show(5,'SCANNING')
@@ -195,18 +197,24 @@ def switchCtrl(command_input, response):
 
 def robotCtrl(command_input, response):
     global direction_command, turn_command
-    if 'forward' == command_input:
+    # The car was assemblied flipped, flip backward and forward.
+
+    if 'handdown' == command_input:
+        listen = audioListner()
+        command_input = listen.record()
+        print ("Listen data = " + command_input)
+
+    if 'backward' == command_input:
         direction_command = 'forward'
         move.move(speed_set, 'forward', 'no', rad)
     
-    elif 'backward' == command_input:
+    elif 'forward' == command_input:
         direction_command = 'backward'
         move.move(speed_set, 'backward', 'no', rad)
 
     elif 'DS' in command_input:
         direction_command = 'no'
         move.move(speed_set, 'no', 'no', rad)
-
 
     elif 'left' == command_input:
         turn_command = 'left'
@@ -233,10 +241,12 @@ def robotCtrl(command_input, response):
    # elif 'LRstop' in command_input:
    #     P_sc.stopWiggle()
 
-    elif 'up' == command_input:
+    # The car was assemblied flipped, flip backward and forward.
+
+    elif 'down' == command_input:
        # C_sc.singleServo(0, 1, 3)
         servo.camera_ang('lookup','no')
-    elif 'down' == command_input:
+    elif 'up' == command_input:
        # C_sc.singleServo(0, -1, 3)
         servo.camera_ang('lookdown','no')
     #elif 'UDstop'==command_input:
@@ -397,6 +407,7 @@ async def check_permit(websocket):
 async def recv_msg(websocket):
     global speed_set, modeSelect
     move.setup()
+    global direction_command, turn_command
     direction_command = 'no'
     turn_command = 'no'
 
@@ -517,7 +528,7 @@ if __name__ == '__main__':
         pass
 
     while  1:
-        wifi_check()
+        #wifi_check()
         try:                  #Start server,waiting for client
             start_server = websockets.serve(main_logic, '0.0.0.0', 8888)
             asyncio.get_event_loop().run_until_complete(start_server)
