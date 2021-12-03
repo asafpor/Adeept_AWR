@@ -351,6 +351,8 @@ class CVThread(threading.Thread):
 class Camera(BaseCamera):
     video_source = 0
     modeSelect = 'none'
+    PORT = 60000
+    pid = -1
     # modeSelect = 'findlineCV'
     # modeSelect = 'findColor'
     # modeSelect = 'watchDog'
@@ -418,27 +420,52 @@ class Camera(BaseCamera):
         Camera.video_source = source
 
     @staticmethod
-    def open_camera():
-        print ("Camera.video_source = " + str(Camera.video_source) )
-        #        camera = cv2.VideoCapture(Camera.video_source)
-#        subprocess.Popen(["sudo","libcamera-vid","-t","0","-o","/home/pi/cam.h264"])
-#        subprocess.Popen(["sudo","libcamera-vid","-t","0", "--inline", "--listen", "-o", "tcp://0.0.0.0:1124"])
-        print ("Opened camera process")
-        time.sleep(3)
-#        camera = cv2.VideoCapture("/home/pi/cam.h264")
-        #libcamera-vid -t 0 --inline --listen -o tcp://0.0.0.0:1123
-        Camera.camera = cv2.VideoCapture("tcp://127.0.0.1:1134")
-        
-#        camera = cv2.VideoCapture("udp://@:1156?overrun_nonfatal=1&fifo_size=50000000 :demux=h264")
+    
+    def open_camera(reconnect = False):
+        while (True)
+            ttl = 0
+            try:
+                if (reconnect):
+                    Camera.PORT += 5                   
+                    command = ['/usr/bin/libcamera-vid', 'libcamera-vid', '-t', '0', '--inline', '--listen', '-o', 'tcp://0.0.0.0:' +str(Camera.PORT)]
+                    Camera.pid = os.spawnlp(os.P_NOWAIT, *command)
+                    print("process id - " + str(Camera.pid))
+                else:
+                     Camera.PORT = 1134
+                    #subprocess.Popen(["libcamera-vid","-t","0", "--inline", "--listen", "-o", "tcp://0.0.0.0:" + str(Camera.PORT)])
+                print ("Opened camera process")
+                time.sleep(3)
+            #        camera = cv2.VideoCapture("/home/pi/cam.h264")
+                #libcamera-vid -t 0 --inline --listen -o tcp://0.0.0.0:1123
+                Camera.camera = cv2.VideoCapture("tcp://127.0.0.1:" + str(Camera.PORT))
+                
+        #        camera = cv2.VideoCapture("udp://@:1156?overrun_\nonfatal=1&fifo_size=50000000 :demux=h264")
+                print ("Capture video")
+                if not Camera.camera.isOpened():
+                    raise RuntimeError('Could not start camera.')
+                return
+            except:
+                ttl += 1
+                if (ttl == 2):
+                    os.system('sudo reboot')
+                print("Error with camera")
+                print(traceback.format_exc())
+                time.sleep(1)
+                reconnect = True
+                if (Camera.pid != -1):
+                    os.kill(Camera.pid, 9)
+                else:
+                    #os.pkill("vid", 9)
+                    pass
+                continue
 
-        print ("Capture video")
-        if not Camera.camera.isOpened():
-            raise RuntimeError('Could not start camera.')
+
+   
 
     @staticmethod
     def frames():
         
-        Camera.open_camera()
+        Camera.open_camera(True)
         cvt = CVThread()
         cvt.start()
         errors = 0
@@ -474,4 +501,5 @@ class Camera(BaseCamera):
                     Camera.camera.release()
                     cv2.destroyAllWindows()
                     time.sleep(1)
-                    Camera.open_camera()
+                    Camera.open_camera(True)
+
