@@ -31,12 +31,16 @@ done = False
 # Example using websockets
 class MyRecognizeCallback(RecognizeCallback):
     def __init__(self):
+        global done,data
         RecognizeCallback.__init__(self)
+        done = False
+        data = ""
 
     def on_transcription(self, transcript):
         global done, data
         print(transcript)
         data = transcript[0][0]['transcript']
+        print(data)
         if ("light" in data):
             data = "lights"
         elif ("forward" in data):
@@ -61,11 +65,14 @@ class MyRecognizeCallback(RecognizeCallback):
         print('Service is listening')
 
     def on_hypothesis(self, hypothesis):       
-        #print(hypothesis)
+        print("on hypo" + hypothesis)
         pass
     
     def on_data(self, data):
-        #print(data)
+        global done
+        print("on data" + str(data))
+        done = True
+        data = ""
         pass
 
 class AudioListner():
@@ -88,7 +95,14 @@ class AudioListner():
     #def run(self):
     #    while True:
     #        time.sleep(10)
-    
+
+    def wait_for_output(self):
+        while (done == False):
+            print ("Listening")
+            time.sleep(0.5)
+        print ("voice output = " + data)
+        return data
+
     def record(self):
         global done,data
         done = False
@@ -113,9 +127,10 @@ class AudioListner():
                 dev_index = ii
 
         assert(dev_index != -1)
-
+        print("dev_index = " + str(dev_index))
         samp_rate = int(audio.get_device_info_by_index(dev_index).get('defaultSampleRate'))
         print(samp_rate)
+        chunk = 4000
 
         print("chunk = " + str(chunk))
         stream = audio.open(format = form_1,rate = samp_rate,channels = chans, \
@@ -152,3 +167,6 @@ class AudioListner():
         print ("voice output = " + data)
         return data
 
+if __name__ == '__main__':
+    listner = AudioListner()
+    listner.record() 

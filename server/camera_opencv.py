@@ -422,7 +422,7 @@ class Camera(BaseCamera):
     @staticmethod
     
     def open_camera(reconnect = False):
-        while (True)
+        while (True):
             ttl = 0
             try:
                 if (reconnect):
@@ -442,6 +442,7 @@ class Camera(BaseCamera):
         #        camera = cv2.VideoCapture("udp://@:1156?overrun_\nonfatal=1&fifo_size=50000000 :demux=h264")
                 print ("Capture video")
                 if not Camera.camera.isOpened():
+                    os.system('sudo reboot')
                     raise RuntimeError('Could not start camera.')
                 return
             except:
@@ -502,4 +503,6 @@ class Camera(BaseCamera):
                     cv2.destroyAllWindows()
                     time.sleep(1)
                     Camera.open_camera(True)
+                if (errors == 30):
+                    os.system('sudo reboot') 
 
