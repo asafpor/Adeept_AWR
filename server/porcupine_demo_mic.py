@@ -118,11 +118,16 @@ class PorcupineDemo(Thread):
 #                if True:
                     print('[%s] Detected %s' % (str(datetime.now()), keywords[result]))
                     wav_file1 = wave.open('/home/pi/test2.wav', "w")
+#                    wav_file1.setnchannels(1)
+#                    wav_file1.setsampwidth(16000)
+#                    wav_file1.setframerate(512)
+
                     wav_file1.setparams((1, 2, 16000, 512, "NONE", "NONE"))
                     print("start recording")
                     time.sleep(5)
                     print("stop recording")
                     print("start while")
+                    close = True
                     for ii in range(256):
                         try:
 #                            print("in while")
@@ -133,12 +138,15 @@ class PorcupineDemo(Thread):
                                wav_file1.writeframes(struct.pack("h" * len(pcm), *pcm))
                         except:
                             print ("read error")
+                            close = False
                             wav_file1.close()
                             break
+                    if close:
+                         wav_file1.close()
 #                    recorder.start()
                    # recorder.delete()
                    # time.sleep(5)
-                    self._listener.parse_output('/home/pi/test2.wav')
+                    self._listener.parse_output('/home/pi/test2.wav', "audio/l16; rate=16000")
                     word = self._listener.wait_for_output()
                     print(word)
  #                   recorder.start()

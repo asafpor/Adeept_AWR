@@ -82,14 +82,14 @@ class AudioListner():
         self.service = SpeechToTextV1(authenticator=self.authenticator)
         self.service.set_service_url(SPEECH_TO_TEXT_URL)
 
-    def parse_output(self, file):
+    def parse_output(self, file, a_params):
         # Example using threads in a non-blocking way
         mycallback = MyRecognizeCallback()
         audio_file = open(join(dirname(__file__), file), 'rb')
         audio_source = AudioSource(audio_file)
         recognize_thread = threading.Thread(
         target=self.service.recognize_using_websocket,
-        args=(audio_source, "audio/l16; rate=44100", mycallback))
+        args=(audio_source, a_params, mycallback))
         recognize_thread.start()
 
     #def run(self):
@@ -159,7 +159,7 @@ class AudioListner():
         wavefile.setframerate(samp_rate)
         wavefile.writeframes(b''.join(frames))
         wavefile.close()
-        self.parse_output(wav_output_filename)
+        self.parse_output(wav_output_filename, "audio/l16; rate=44100")
         audio.terminate()
         while (done == False):
             print ("Listening")
