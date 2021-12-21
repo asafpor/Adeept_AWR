@@ -41,14 +41,6 @@ class MyRecognizeCallback(RecognizeCallback):
         print(transcript)
         data = transcript[0][0]['transcript']
         print(data)
-        if ("light" in data):
-            data = "lights"
-        elif ("forward" in data):
-            data = "forward"
-        elif ("backward" in data):
-            data = "backward"
-        elif ("left" in data):
-            data = "left"
         done = True
 
 

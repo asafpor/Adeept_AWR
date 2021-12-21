@@ -427,7 +427,7 @@ class Camera(BaseCamera):
             try:
                 if (reconnect):
                     Camera.PORT += 5                   
-                    command = ['/usr/bin/libcamera-vid', 'libcamera-vid', '-t', '0', '--inline', '--listen', '-o', 'tcp://0.0.0.0:' +str(Camera.PORT)]
+                    command = ['/usr/bin/libcamera-vid', 'libcamera-vid', '-t', '0', '--framerate','16' ,'--width', '640', '--height', '480', '--inline', '--listen', '-o', 'tcp://0.0.0.0:' +str(Camera.PORT)]
                     Camera.pid = os.spawnlp(os.P_NOWAIT, *command)
                     print("process id - " + str(Camera.pid))
                 else:

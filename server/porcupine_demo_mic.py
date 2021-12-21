@@ -20,7 +20,14 @@ from threading import Thread
 import pvporcupine
 from pvrecorder import PvRecorder
 import audioListner
+import textToSpeech
+from pygame import mixer
+from pydub import AudioSegment
+from pydub.playback import play
+import websocket
 
+
+POR_ACCESS_KEY = 'lhkG6c+GZ0d9U35msJQM2l/9EMS4o9Otq0ITLeZZG52USLn4uqdNNA=='
 
 class PorcupineDemo(Thread):
     """
@@ -54,7 +61,7 @@ class PorcupineDemo(Thread):
         """
 
         super(PorcupineDemo, self).__init__()
-        print (os.environ["POR_ACCESS_KEY"])
+        print (POR_ACCESS_KEY)
 
         self._access_key = access_key
         self._library_path = library_path
@@ -65,6 +72,10 @@ class PorcupineDemo(Thread):
 
         self._output_path = output_path
         self._listener = audioListner.AudioListner()
+        self._textToSpeech = textToSpeech.audioPlayer()
+        #mixer.init()
+        self._ws = websocket.WebSocket()
+        
 
 
     def run(self):
@@ -115,8 +126,10 @@ class PorcupineDemo(Thread):
 
                 result = porcupine.process(pcm)
                 if result >= 0:
-#                if True:
                     print('[%s] Detected %s' % (str(datetime.now()), keywords[result]))
+                    reader_voice = AudioSegment.from_wav('/home/pi/yes_please.wav')
+                    play(reader_voice)
+#                if True:                    
                     wav_file1 = wave.open('/home/pi/test2.wav', "w")
 #                    wav_file1.setnchannels(1)
 #                    wav_file1.setsampwidth(16000)
@@ -124,7 +137,7 @@ class PorcupineDemo(Thread):
 
                     wav_file1.setparams((1, 2, 16000, 512, "NONE", "NONE"))
                     print("start recording")
-                    time.sleep(5)
+                    time.sleep(2.5)
                     print("stop recording")
                     print("start while")
                     close = True
@@ -143,13 +156,77 @@ class PorcupineDemo(Thread):
                             break
                     if close:
                          wav_file1.close()
-#                    recorder.start()
-                   # recorder.delete()
-                   # time.sleep(5)
+                    SLEEP_TIME = 1
                     self._listener.parse_output('/home/pi/test2.wav', "audio/l16; rate=16000")
-                    word = self._listener.wait_for_output()
-                    print(word)
- #                   recorder.start()
+                    out_text = self._listener.wait_for_output()
+                    print(out_text)
+                    if out_text == "":
+                        continue 
+                    try:
+                        if ("police" in out_text and "on" in out_text):
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("police")
+                        elif ("police" in out_text and "off" in out_text):
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("policeOff")
+                        elif ("forward" in out_text) or (("move" in out_text) and ("straight" in out_text)):
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("forward")
+                            time.sleep(SLEEP_TIME)
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("stop")
+                        elif ("backward" in out_text) or (("move" in out_text) and ("back" in out_text)):
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("backward")
+                            time.sleep(SLEEP_TIME)
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("stop")
+                        elif ("left" in out_text):
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("left")
+                            time.sleep(SLEEP_TIME)
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("stop")
+                        elif ("right" in out_text):
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("rightt")
+                            time.sleep(SLEEP_TIME)
+                            self._ws.connect("ws://localhost:8888")
+                            self._ws.send("admin:123456")
+                            self._ws.send("stop")
+                        else:
+                            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    except:
+                        pass
+                    
+                    file_name = '/home/pi/my_output1.wav'
+                    try:
+                        os.remove(file_name)
+                    except:
+                        pass
+                    self._textToSpeech.playAudio(out_text, file_name) 
+                    print ("self._textToSpeech.isDone()" + str(self._textToSpeech.isDone()))
+                    while self._textToSpeech.isDone() == False:
+                        time.sleep(0.5)
+                        print ("waiting...")
+                    reader_voice = AudioSegment.from_wav(file_name)
+                    play(reader_voice)
+                    #sound = mixer.Sound(file_name)
+                    #sound.play()
+
+
+
+ 
 
         except KeyboardInterrupt:
             print('Stopping ...')
@@ -217,7 +294,7 @@ def main():
         PorcupineDemo.show_audio_devices()
     else:
         if args.access_key is None:
-            args.access_key = os.environ["POR_ACCESS_KEY"]
+            args.access_key = POR_ACCESS_KEY
 #            raise ValueError("AccessKey (--access_key) is required")
         if args.keyword_paths is None:
             if args.keywords is None:

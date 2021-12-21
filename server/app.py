@@ -55,18 +55,30 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 @app.route('/api/img/<path:filename>')
 def sendimg(filename):
+    print("sendimg")
+    print(dir_path)
+    print(filename)
     return send_from_directory(dir_path+'/dist/img', filename)
 
 @app.route('/js/<path:filename>')
 def sendjs(filename):
+    print("sendjs")
+    print(dir_path)
+    print(filename)
     return send_from_directory(dir_path+'/dist/js', filename)
 
 @app.route('/css/<path:filename>')
 def sendcss(filename):
+    print("sendcss")
+    print(dir_path)
+    print(filename)
     return send_from_directory(dir_path+'/dist/css', filename)
 
 @app.route('/api/img/icon/<path:filename>')
 def sendicon(filename):
+    print("sendicon")
+    print(dir_path)
+    print(filename)
     return send_from_directory(dir_path+'/dist/img/icon', filename)
 
 @app.route('/fonts/<path:filename>')
@@ -75,10 +87,14 @@ def sendfonts(filename):
 
 @app.route('/<path:filename>')
 def sendgen(filename):
+    print("sendgen")
+    print(dir_path)
+    print(filename)
     return send_from_directory(dir_path+'/dist', filename)
 
 @app.route('/')
 def index():
+    print("index")
     return send_from_directory(dir_path+'/dist', 'index.html')
 
 class webapp:
