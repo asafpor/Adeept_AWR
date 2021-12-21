@@ -24,7 +24,6 @@ import websockets
 
 import json
 import app
-import audioListner
 
 OLED_connection = 1
 try:
@@ -200,9 +199,7 @@ def robotCtrl(command_input, response):
     # The car was assemblied flipped, flip backward and forward.
 
     if 'handdown' == command_input:
-        listen = audioListner.AudioListner()
-        command_input = listen.record()
-        print ("Listen data = " + command_input)
+        pass
 
     if 'backward' == command_input:
         direction_command = 'forward'
