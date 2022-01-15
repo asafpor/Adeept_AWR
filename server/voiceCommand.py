@@ -40,7 +40,8 @@ class VoiceCommand:
     # Function to convert text to
     # speech
     def SpeakText(self, command):
-      
+        logging.debug(command);
+
         self._engine.say(command) 
         self._engine.runAndWait();
 
@@ -79,8 +80,17 @@ class VoiceCommand:
                 logging.warning("Could not request results from Bob")
             return 0
 
-    def parse_text(self, text):
+    def parse_text(self):
+
         for i in range(5):
+            text = {}
+            #reader_voice = AudioSegment.from_wav('/home/pi/yes_please.wav')
+            #play(reader_voice)
+            output = subprocess.Popen(["espeak", "-s140  -ven+18 -z" ," Yes Please"])
+            #output.communicate()
+            #call(["espeak", "-s140  -ven+18 -z" ," Yes Please"])
+            audio = self.listen(10)
+            text = self.voice(audio, True);
             if text != 0:
                 print (text)
                 text_lower = text.lower()
@@ -129,14 +139,7 @@ class VoiceCommand:
             if (text == 0):
                 continue
             if 'hello' in text or "Americano" in text or "Bob" in text or "bob" in text or "bub" in text:
-                text = {}
-                #reader_voice = AudioSegment.from_wav('/home/pi/yes_please.wav')
-                #play(reader_voice)
-                output = subprocess.Popen(["espeak", "-s140  -ven+18 -z" ," Yes Please"])
-                #output.communicate()
-                #call(["espeak", "-s140  -ven+18 -z" ," Yes Please"])
-                audio = self.listen(10)
-                text = self.voice(audio, True);
+                self.parse_text()
                 
                 
             
